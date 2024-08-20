@@ -9,6 +9,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from urllib.parse import quote
+import logging
+from fastapi import Request
 
 app = FastAPI()
 
@@ -63,6 +65,10 @@ async def send_whatsapp(message_file: UploadFile = File(...), numbers_file: Uplo
     driver.quit()
     return JSONResponse(content={"status": "success", "message": "Messages sent successfully!"})
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logging.error(f"An error occurred: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"message": "An internal server error occurred"},
+    )
